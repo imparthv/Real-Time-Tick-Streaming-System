@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # Dependencies
+    'django_celery_results',
+
     # Adding apps
     'tick_consumer',
     'tick_producer',
