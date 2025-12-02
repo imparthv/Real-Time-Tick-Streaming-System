@@ -76,9 +76,6 @@ class Command(BaseCommand):
             # Binance trade stream payload
             trade = data.get("data", {})
 
-            # Binance trade stream payload
-            trade = data.get("data", {})
-
             symbol = trade.get("s", "").lower()
             price = trade.get("p")
             volume = trade.get("q")
