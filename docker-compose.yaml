@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3300:3300"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    container_name: tick_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - redis
+
+  celery_worker:
+    build: .
+    container_name: celery_worker
+    command: celery -A projcelery worker -P eventlet --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+      - redis
+      - mysql
+
+  tick_producer:
+    build: .
+    container_name: tick_producer
+    command: python manage.py run_tick_producer --broker_id=1
+    volumes:
+      - .:/app
+    depends_on:
+      - celery_worker
+      - redis
+      - mysql
+
+volumes:
+  mysql_data:
