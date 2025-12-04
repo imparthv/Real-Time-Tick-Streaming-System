@@ -29,7 +29,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -94,14 +94,11 @@ WSGI_APPLICATION = 'tick_system.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('MYSQL_DATABASE', 'tick_engine'),
-        'USER': os.getenv('MYSQL_USER', 'root'),
-        'PASSWORD': os.getenv('MYSQL_PASSWORD'),
+        'NAME': os.getenv('MYSQL_DATABASE'),
+        'USER': os.getenv('MYSQL_ROOT_USER'),
+        'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),
         'HOST': 'mysql', # Comment when you need to check it on local
-        'PORT': '3300',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        }
+        'PORT': '3306',
     }
 }
 
@@ -153,7 +150,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CELERY_TIMEZONE = "Asia/Kolkata"
 
 # Celery / Redis settings
-CELERY_BROKER_URL = "redis://localhost:6379/0"
+# CELERY_BROKER_URL = "redis://localhost:6379/0"
+
+# Use below when using redis image in docker
+CELERY_BROKER_URL = "redis://redis:6379/0"
 CELERY_RESULT_BACKEND = "django-db"
 
 
