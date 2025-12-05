@@ -9,6 +9,10 @@ from django.core.management.base import BaseCommand
 from celery import Celery
 from tick_consumer.tasks import get_broker, consume_tick
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # BINANCE WebSocket URL
 BINANCE_WS_URL = 'wss://stream.binance.com:9443/stream?streams='
 
@@ -98,7 +102,7 @@ class Command(BaseCommand):
 
 
         except Exception as e:
-            print(f"Error parsing message: {e}")
+            logger.error(f"Error parsing message: {e}")
 
     def on_error(self, ws, error):
         print(f"WebSocket Error: {error}")
