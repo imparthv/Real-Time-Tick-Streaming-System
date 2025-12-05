@@ -90,7 +90,7 @@ class Command(BaseCommand):
                 "script_id": script_map[symbol],
                 "value": float(price),
                 "volume": float(volume) if volume else None,
-                "received_at": datetime.fromtimestamp(ts/1000, tz=timezone).isoformat()
+                "received_at": datetime.fromtimestamp(ts/1000, tz=timezone.utc).isoformat()
             }
 
             # Sends ticks to Celery
