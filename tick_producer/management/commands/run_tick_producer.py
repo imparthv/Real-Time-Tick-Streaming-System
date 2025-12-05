@@ -102,6 +102,7 @@ class Command(BaseCommand):
 
 
         except Exception as e:
+            # Log the error instead of raising
             logger.error(f"Error parsing message: {e}")
 
     def on_error(self, ws, error):

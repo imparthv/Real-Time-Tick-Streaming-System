@@ -56,6 +56,7 @@ def consume_tick(tick_data_list):
                 )
                 )
         except Exception as e:
+            # Log the error instead of raising
             logger.error(f"Error parsing tick: {tick} - {e}")
 
     if ticks_to_create:
@@ -68,5 +69,6 @@ def consume_tick(tick_data_list):
             print(f"Inserted {len(ticks_to_create)} ticks")
 
         except Exception as e:
+            # Log the error instead of raising
             logger.error(f"Error inserting tick: {e}")
 
