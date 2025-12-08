@@ -1,5 +1,5 @@
 TICK SYSTEM -  README
-An applicatio utilising django, celery, mysql and redis to consume live binance ticks and storing them into the database.
+An application utilising django, celery, mysql and redis to consume live binance ticks and storing them into the database.
 
 - How to bring up the stack:
     - Build and start all service:
