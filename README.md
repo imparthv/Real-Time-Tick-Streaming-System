@@ -92,4 +92,3 @@ An application utilising django, celery, mysql and redis to consume live binance
 
 
     
-
