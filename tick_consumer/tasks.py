@@ -1,8 +1,7 @@
 from celery import shared_task
 
 from .models import Broker, Ticks
-from django.utils.dateparse import parse_datetime
-from django.db import transaction
+from datetime import datetime, timezone
 
 import logging
 
@@ -40,21 +39,21 @@ def get_broker(broker_id):
         logger.error(f'Broker with id {broker_id} not found') 
     
 
-# Accepts list of tick dictionaries
+# Accepts a single tick
 @shared_task
 def consume_tick(tick_data):
     try:
-        received_at = parse_datetime(tick_data["received_at"])
+        # received_at = parse_datetime(tick_data["received_at"])
         tick_instance = Ticks(
                 script_id = tick_data["script_id"],
                 tick_value = tick_data["value"],
                 volume = tick_data["volume"],
-                received_at_producer = received_at
+                received_at_producer = datetime.fromtimestamp(tick_data["received_at"]/1000, tz=timezone.utc).isoformat()
         )
 
 
         tick_instance.save()
-        print(f"Inserted a tick")
+        logger.info(f"Inserted a tick")
 
     except Exception as e:
         # Log the error instead of raising
