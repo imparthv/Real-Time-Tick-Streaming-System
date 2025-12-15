@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 # BINANCE WebSocket URL
 BINANCE_WS_URL = 'wss://stream.binance.com:9443/stream?streams='
 
+# Global counters - Measuring Tick per second
+tick_count = 0
+last_logged_tick_time = time.time()
+
 
 class Command(BaseCommand):
     help = "Runs a tick producer for specific broker"
@@ -33,8 +37,8 @@ class Command(BaseCommand):
         broker_data = fetch_broker_data(broker_id)
 
         if "error" in broker_data:
-            # self.stdout.write(self.style.ERROR(broker_data["error"]))
-            logger.error(f"{broker_data['error']}")
+            self.stdout.write(self.style.ERROR(broker_data["error"]))
+            # logger.error(f"{broker_data['error']}")
            
         
         # Fetching scripts
@@ -61,8 +65,7 @@ def fetch_broker_scripts(broker_data):
 
 # Building Binance url
 def build_WS_URL(scripts):
-    symbols = [s["trading_symbol"].lower() for s in scripts]
-    stream_query = "@trade/".join(symbols)
+    stream_query = "/".join([f"{s['trading_symbol'].lower()}@trade" for s in scripts])
     ws_url = BINANCE_WS_URL + stream_query
     return ws_url
 
@@ -71,11 +74,14 @@ def initiate_websocket_connection(ws_url, scripts):
 
     # Find script_id from our mapping
     script_map = {s["trading_symbol"]: s["id"] for s in scripts}
+    def on_message(ws, msg):
+        handle_binance_message(ws, msg ,script_map)
+
     while True:
         try:
             ws = websocket.WebSocketApp(
                 ws_url,
-                on_message=lambda ws, msg : handle_binance_message(ws, msg ,script_map),
+                on_message=on_message,
                 on_error=on_error, 
                 on_close = on_close
                 
@@ -89,14 +95,15 @@ def initiate_websocket_connection(ws_url, scripts):
             logger.log("Reconnecting......")
 
 def handle_binance_message(ws, message, script_map):
+    global tick_count, last_logged_tick_time
     try:
         # JSON formatted string.Requires dict conversion
-        data = json.loads(message).get("data", {})
+        data = json.loads(message)["data"]
 
-        symbol = data.get("s", "").lower()
-        price = data.get("p")
-        volume = data.get("q")
-        ts = int(data.get("T"))
+        symbol = data["s"].lower()
+        price = data["p"]
+        volume = data["q"]
+        ts = int(data["T"])
         
         if symbol not in script_map:
             logger.error(f'Stream symbol {symbol} unavailble in map ')
@@ -104,10 +111,20 @@ def handle_binance_message(ws, message, script_map):
         # Sends ticks to Celery
         consume_tick.delay({
             "script_id": script_map[symbol],
-            "value": float(price),
-            "volume": float(volume) if volume else None,
+            "value": price,
+            "volume": volume if volume else None,
             "received_at": ts
         })
+
+        tick_count +=1 
+        current_time = time.time()
+        time_diff = current_time - last_logged_tick_time
+
+        if  time_diff >= 1:
+            ticks_per_second = tick_count / time_diff
+            print(f"Ticks production rate: {ticks_per_second:.2f} ticks/sec| Total ticks: {tick_count} ticks")
+            tick_count = 0
+            last_logged_tick_time = current_time
 
 
     except Exception as e:
@@ -115,7 +132,7 @@ def handle_binance_message(ws, message, script_map):
         logger.error(f"Error parsing message: {e}")
 
 def on_error(ws, error):
-    print(f"WebSocket Error: {error}")
+    logger.error(f"WebSocket Error: {error}")
 
 def on_close(ws, *args):
-    print("WebSocket closed. Reconnecting...")
+    logger.info("WebSocket closed. Reconnecting...")
