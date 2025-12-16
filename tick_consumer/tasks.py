@@ -8,6 +8,12 @@ import logging
 # Creating a logger
 logger = logging.getLogger(__name__)
 
+try: 
+    from line_profiler import profile
+except ImportError:
+    def profile(func):
+        return func
+
 
 # Returns broker details and all the scripts related to broker
 # The scripts are list of dictionaries
@@ -41,6 +47,7 @@ def get_broker(broker_id):
 
 # Accepts a single tick
 @shared_task
+@profile
 def consume_tick(tick_data):
     try:
         # received_at = parse_datetime(tick_data["received_at"])
