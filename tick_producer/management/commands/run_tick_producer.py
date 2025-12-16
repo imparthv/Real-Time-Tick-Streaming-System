@@ -120,8 +120,8 @@ def handle_binance_message(ws, message, script_map):
         time_diff = current_time - last_logged_tick_time
 
         if  time_diff >= 1.0:
-            ticks_per_second = time_diff/tick_count
-            print(f"Ticks production rate: {ticks_per_second:.2f} ticks/sec| Processing time: {tick_processing_time * 1000} ms")
+            ticks_per_second = tick_count/time_diff
+            print(f" Processing time: {tick_processing_time * 1000} ms | Ticks production rate: {ticks_per_second:.2f} ticks/sec| Total ticks = {tick_count} ticks")
             tick_count = 0
             last_logged_tick_time = current_time
 
