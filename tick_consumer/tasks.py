@@ -51,15 +51,13 @@ def get_broker(broker_id):
 def consume_tick(tick_data):
     try:
         # received_at = parse_datetime(tick_data["received_at"])
-        tick_instance = Ticks(
+        start_time = time.perf_counter()
+        Ticks.objects.create(
                 script_id = tick_data["script_id"],
                 tick_value = tick_data["value"],
                 volume = tick_data["volume"],
                 received_at_producer = datetime.fromtimestamp(tick_data["received_at"]/1000, tz=timezone.utc).isoformat()
         )
-
-        start_time = time.perf_counter()
-        tick_instance.save()
         elasped_time = (time.perf_counter() -  start_time)
         logger.info(f"Inserted a tick in {elasped_time * 1000} ms")
         # profile.print_stats()
